@@ -1,3 +1,4 @@
+
 getUnigram <- function(text){
    text <- removeWords(text,badwords)
    text <- gsub(" *\\b[[:alpha:]]{1,2}\\b *", " ", text) # Remove 1-2 letter words
@@ -5,6 +6,7 @@ getUnigram <- function(text){
    text <- stringi::stri_trans_general(text, "latin-ascii")
    unigram <- data.frame(words = unlist(tokenize_ngrams(text, n = 1L, n_min = 1L, simplify = TRUE)))
    
+   unigram$words[which(!is.na(str_extract(unigram$words,"watch")))] <- NA
    unigram$words[which(!is.na(str_extract(unigram$words,"comentario")))] <- NA
    unigram$words[which(!is.na(str_extract(unigram$words,"timeline")))] <- NA
    unigram$words[which(!is.na(str_extract(unigram$words,"video")))] <- NA
@@ -23,6 +25,7 @@ getTrigram <- function(text){
    text <- stringi::stri_trans_general(text, "latin-ascii")
    trigram <- data.frame(words = unlist(tokenize_ngrams(text, n = 3L, n_min = 3L, simplify = TRUE)))
    
+   trigram$words[which(!is.na(str_extract(trigram$words,"watch")))] <- NA
    trigram$words[which(!is.na(str_extract(trigram$words,"conta")))] <- NA
    trigram$words[which(!is.na(str_extract(trigram$words,"essa")))] <- NA
    trigram$words[which(!is.na(str_extract(trigram$words,"bata")))] <- NA
@@ -62,6 +65,7 @@ getBigram <- function(text){
    text <- stringi::stri_trans_general(text, "latin-ascii")
    bigram <- data.frame(words = unlist(tokenize_ngrams(text, n = 2L, n_min = 2L, simplify = TRUE)))
    
+   bigram$words[which(!is.na(str_extract(bigram$words,"watch")))] <- NA
    bigram$words[which(!is.na(str_extract(bigram$words,"conta")))] <- NA
    bigram$words[which(!is.na(str_extract(bigram$words,"essa")))] <- NA
    bigram$words[which(!is.na(str_extract(bigram$words,"bata")))] <- NA
@@ -249,7 +253,7 @@ function(input, output, session) {
      mypage <- getPage(id_pagina, token = fb_oauth, feed=TRUE, since= as.character(data_inicio), until=as.character(data_final))
      id_post <- mypage$id[which(as.character(mypage$link)%in%url)]
      
-     post_dados <- getPost(id_post, token=fb_oauth, n= 10000)
+     post_dados <- getPost(id_post, token=fb_oauth, n= 1000000)
      text <- post_dados$comments$message
      bigram <- getBigram(text)
      bigram %>% 
@@ -282,7 +286,7 @@ function(input, output, session) {
      mypage <- getPage(id_pagina, token = fb_oauth, feed=TRUE, since= as.character(data_inicio), until=as.character(data_final))
      id_post <- mypage$id[which(as.character(mypage$link)%in%url)]
      
-     post_dados <- getPost(id_post, token=fb_oauth, n= 10000)
+     post_dados <- getPost(id_post, token=fb_oauth, n= 1000000)
      text <- post_dados$comments$message
      trigram <- getTrigram(text)
      trigram %>%
@@ -315,7 +319,7 @@ function(input, output, session) {
      mypage <- getPage(id_pagina, token = fb_oauth, feed=TRUE, since= as.character(data_inicio), until=as.character(data_final))
      id_post <- mypage$id[which(as.character(mypage$link)%in%url)]
      
-     post_dados <- getPost(id_post, token=fb_oauth, n= 10000)
+     post_dados <- getPost(id_post, token=fb_oauth, n= 1000000)
      text <- post_dados$comments$message
      unigram <- getUnigram(text)
      unigram %>% 
@@ -348,7 +352,7 @@ function(input, output, session) {
      mypage <- getPage(id_pagina, token = fb_oauth, feed=TRUE, since= as.character(data_inicio), until=as.character(data_final))
      id_post <- mypage$id[which(as.character(mypage$link)%in%url)]
      
-     post_dados <- getPost(id_post, token=fb_oauth, n= 10000)
+     post_dados <- getPost(id_post, token=fb_oauth, n= 1000000)
      text <- post_dados$comments$message
      mydfm <- getDFMatrix(text);
      set.seed(100)
@@ -373,7 +377,7 @@ function(input, output, session) {
      mypage <- getPage(id_pagina, token = fb_oauth, feed=TRUE, since= as.character(data_inicio), until=as.character(data_final))
      id_post <- mypage$id[which(as.character(mypage$link)%in%url)]
      
-     post_dados <- getPost(id_post, token=fb_oauth, n= 1000)
+     post_dados <- getPost(id_post, token=fb_oauth, n= 1000000)
      timeseries <- post_dados$comments %>% mutate(
         day = ymd_hms(created_time) %>%
            as.Date() %>%
@@ -392,7 +396,7 @@ function(input, output, session) {
         group_by(year,month,day,hour,min) %>%
         summarise(total = n())
      
-     timeseries <- timeseries[-c(1:22),];
+  #   timeseries <- timeseries[-c(1:22),];
      timeseries$hour <- as.numeric(timeseries$hour) - 3#por causa da diferença de fuso com relação ao GMT
      timeseries$hour <- as.character(timeseries$hour)
      
@@ -408,7 +412,7 @@ function(input, output, session) {
   #####################################3 DASHBOARD
   
   output$reactionsPlot <- renderPlot({
-     invalidateLater(1*60*1000)
+     #invalidateLater(5*60*1000)
      url <- input$urlpost
      #     id_pagina <- input$fbid 
      id_pagina <- getFBID(url)
@@ -438,7 +442,7 @@ function(input, output, session) {
   })
 
   output$sentimentPlot <- renderPlot({
-     invalidateLater(1*20*1000)
+     #invalidateLater(5*60*1000)
      url <- input$urlpost
      #     id_pagina <- input$fbid 
      id_pagina <- getFBID(url)
@@ -493,7 +497,7 @@ function(input, output, session) {
   })
     
   output$wordcloudPlot <- renderPlot({
-     invalidateLater(1*60*1000)
+     #invalidateLater(5*60*1000)
      url <- input$urlpost
      #     id_pagina <- input$fbid 
      id_pagina <- getFBID(url)
@@ -509,7 +513,7 @@ function(input, output, session) {
      mypage <- getPage(id_pagina, token = fb_oauth, feed=TRUE, since= as.character(data_inicio), until=as.character(data_final))
      id_post <- mypage$id[which(as.character(mypage$link)%in%url)]
      
-     post_dados <- getPost(id_post, token=fb_oauth, n= 10000)
+     post_dados <- getPost(id_post, token=fb_oauth, n= 1000000)
      text <- post_dados$comments$message
      mydfm <- getDFMatrix(text);
      set.seed(100)
@@ -520,7 +524,7 @@ function(input, output, session) {
   })
   
   output$unigramaPlot <- renderPlot({
-     invalidateLater(1*60*1000)
+     #invalidateLater(5*60*1000)
      url <- input$urlpost
      #     id_pagina <- input$fbid 
      id_pagina <- getFBID(url)
@@ -536,7 +540,7 @@ function(input, output, session) {
      mypage <- getPage(id_pagina, token = fb_oauth, feed=TRUE, since= as.character(data_inicio), until=as.character(data_final))
      id_post <- mypage$id[which(as.character(mypage$link)%in%url)]
      
-     post_dados <- getPost(id_post, token=fb_oauth, n= 10000)
+     post_dados <- getPost(id_post, token=fb_oauth, n= 1000000)
      text <- post_dados$comments$message
      unigram <- getUnigram(text)
      unigram %>% 
@@ -553,7 +557,7 @@ function(input, output, session) {
   })
   
   output$bigramaPlot <- renderPlot({
-     invalidateLater(1*60*1000)
+     #invalidateLater(5*60*1000)
      url <- input$urlpost
      #     id_pagina <- input$fbid 
      id_pagina <- getFBID(url)
@@ -569,7 +573,7 @@ function(input, output, session) {
      mypage <- getPage(id_pagina, token = fb_oauth, feed=TRUE, since= as.character(data_inicio), until=as.character(data_final))
      id_post <- mypage$id[which(as.character(mypage$link)%in%url)]
      
-     post_dados <- getPost(id_post, token=fb_oauth, n= 10000)
+     post_dados <- getPost(id_post, token=fb_oauth, n= 1000000)
      text <- post_dados$comments$message
      bigram <- getBigram(text)
      bigram %>% 
@@ -587,7 +591,7 @@ function(input, output, session) {
   })
   
   output$trigramaPlot <- renderPlot({
-     invalidateLater(1*60*1000)
+     #invalidateLater(5*60*1000)
      url <- input$urlpost
      #     id_pagina <- input$fbid 
      id_pagina <- getFBID(url)
@@ -603,7 +607,7 @@ function(input, output, session) {
      mypage <- getPage(id_pagina, token = fb_oauth, feed=TRUE, since= as.character(data_inicio), until=as.character(data_final))
      id_post <- mypage$id[which(as.character(mypage$link)%in%url)]
      
-     post_dados <- getPost(id_post, token=fb_oauth, n= 10000)
+     post_dados <- getPost(id_post, token=fb_oauth, n= 1000000)
      text <- post_dados$comments$message
      trigram <- getTrigram(text)
      trigram %>%
@@ -621,7 +625,7 @@ function(input, output, session) {
   })
 
   output$commentsPlot <- renderPlot({
-     invalidateLater(1*60*1000)
+     #invalidateLater(5*60*1000)
      url <- input$urlpost
      #     id_pagina <- input$fbid 
      id_pagina <- getFBID(url)
@@ -637,7 +641,7 @@ function(input, output, session) {
      mypage <- getPage(id_pagina, token = fb_oauth, feed=TRUE, since= as.character(data_inicio), until=as.character(data_final))
      id_post <- mypage$id[which(as.character(mypage$link)%in%url)]
      
-     post_dados <- getPost(id_post, token=fb_oauth, n= 1000)
+     post_dados <- getPost(id_post, token=fb_oauth, n= 1000000)
      timeseries <- post_dados$comments %>% mutate(
         day = ymd_hms(created_time) %>%
            as.Date() %>%
