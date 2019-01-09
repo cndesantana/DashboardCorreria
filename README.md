@@ -1,2 +1,9 @@
 # DashboardCorreria
-Dashboard para elaboração de relatório do Papo Correria
+Shiny-Dashboard for the tracking of audience of Facebook live videos.
+
+It involves: 
+
+- Data mining
+- Data classification
+- Data visualization
+
